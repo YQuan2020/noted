@@ -19,6 +19,7 @@ export default function Cards({
   const [loading, setLoading] = useState(true);
   const [showImport, setShowImport] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [unfilingId, setUnfilingId] = useState<string | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -30,6 +31,18 @@ export default function Cards({
     }, 200);
     return () => clearTimeout(t);
   }, [q, deckId, refreshKey]);
+
+  const unfile = async (c: Card) => {
+    setUnfilingId(c.id);
+    try {
+      await api.updateCard(c.id, { deckId: null });
+      setRefreshKey((k) => k + 1);
+    } catch {
+      /* leave the list unchanged; a retry is a tap away */
+    } finally {
+      setUnfilingId(null);
+    }
+  };
 
   return (
     <div className="mx-auto w-full max-w-xl">
@@ -86,10 +99,10 @@ export default function Cards({
       ) : (
         <ul className="divide-y divide-neutral-100">
           {cards.map((c) => (
-            <li key={c.id}>
+            <li key={c.id} className="flex items-center gap-2">
               <button
                 onClick={() => onEdit(c.id)}
-                className="flex w-full items-center gap-3 py-3 text-left hover:bg-neutral-50"
+                className="flex min-w-0 flex-1 items-center gap-3 py-3 text-left hover:bg-neutral-50"
               >
                 {c.imageUrl ? (
                   <img
@@ -112,6 +125,16 @@ export default function Cards({
                   </span>
                 )}
               </button>
+              {c.deckId && (
+                <button
+                  onClick={() => unfile(c)}
+                  disabled={unfilingId === c.id}
+                  title="Remove from deck"
+                  className="flex-none rounded-md border border-neutral-200 px-2 py-1 text-xs text-neutral-400 hover:border-neutral-300 hover:text-neutral-700 disabled:opacity-40"
+                >
+                  Unfile
+                </button>
+              )}
             </li>
           ))}
         </ul>
