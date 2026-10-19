@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
+import { wordPartMeta } from '../lib/wordParts';
 import type { Card } from '../types';
 import DeckPicker from '../components/DeckPicker';
 import ImportCards from '../components/ImportCards';
@@ -116,7 +117,17 @@ export default function Cards({
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-neutral-900">{c.front}</p>
+                  <p className="flex items-center gap-1.5 truncate text-neutral-900">
+                    {c.wordPart && (
+                      <span
+                        className={`inline-flex flex-none items-center gap-0.5 rounded-full border px-1.5 text-[10px] font-medium ${wordPartMeta(c.wordPart).badge}`}
+                      >
+                        <span aria-hidden>{wordPartMeta(c.wordPart).icon}</span>
+                        {wordPartMeta(c.wordPart).label}
+                      </span>
+                    )}
+                    <span className="truncate">{c.front}</span>
+                  </p>
                   <p className="truncate text-sm text-neutral-400">{c.back.replace(/\\n/g, ' ')}</p>
                 </div>
                 {c.reps > 0 && (

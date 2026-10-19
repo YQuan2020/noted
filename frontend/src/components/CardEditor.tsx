@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
+import { WORD_PARTS } from '../lib/wordParts';
+import type { WordPart } from '../types';
 import Mermaid from './Mermaid';
 import RelationEditor from './RelationEditor';
 import DeckPicker from './DeckPicker';
@@ -21,6 +23,7 @@ export default function CardEditor({
   const [imageId, setImageId] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [deckId, setDeckId] = useState<string | null>(null);
+  const [wordPart, setWordPart] = useState<WordPart | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +45,7 @@ export default function CardEditor({
           setImageId(card.imageId);
           setImageUrl(card.imageUrl);
           setDeckId(card.deckId);
+          setWordPart(card.wordPart);
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load card');
@@ -86,6 +90,7 @@ export default function CardEditor({
         front: front.trim(),
         back: back.trim(),
         mermaid: mermaid.trim() || null,
+        wordPart: wordPart ?? null,
         imageId: imageId ?? null,
         deckId: deckId ?? null,
       };
@@ -148,6 +153,30 @@ export default function CardEditor({
           className="rounded-lg border border-neutral-200 px-3 py-2 text-base focus:border-neutral-400 focus:outline-none"
         />
       </label>
+
+      <div className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-neutral-600">Word part (optional)</span>
+        <div className="flex gap-2">
+          {WORD_PARTS.map((p) => {
+            const active = wordPart === p.key;
+            return (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => setWordPart(active ? null : p.key)}
+                className={`flex flex-1 items-center justify-center gap-1 rounded-md border px-3 py-2 text-sm transition-colors ${
+                  active
+                    ? 'border-neutral-900 bg-neutral-900 text-white'
+                    : 'border-neutral-200 text-neutral-600 hover:border-neutral-300'
+                }`}
+              >
+                <span aria-hidden>{p.icon}</span>
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       <label className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-neutral-600">Back (answer)</span>

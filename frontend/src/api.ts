@@ -1,4 +1,4 @@
-import type { Card, Deck, DecksResponse, Grade, ImageRecord, Relation, User } from './types';
+import type { Card, Deck, DecksResponse, Grade, ImageRecord, Relation, User, WordPart } from './types';
 
 const USER_KEY = 'noted.user';
 
@@ -83,6 +83,7 @@ export const api = {
     front: string;
     back: string;
     mermaid?: string | null;
+    wordPart?: WordPart | null;
     imageId?: string | null;
     deckId?: string | null;
   }) => request<{ card: Card }>('/cards', jsonInit('POST', data)),
@@ -102,6 +103,7 @@ export const api = {
       front?: string;
       back?: string;
       mermaid?: string | null;
+      wordPart?: WordPart | null;
       imageId?: string | null;
       deckId?: string | null;
     },

@@ -1,5 +1,6 @@
 import type { Card } from '../types';
 import { cambridgeUrl } from '../lib/dictionary';
+import { wordPartMeta } from '../lib/wordParts';
 import MarkdownText from './MarkdownText';
 import Mermaid from './Mermaid';
 
@@ -16,15 +17,26 @@ export default function CardFace({ card, side }: { card: Card; side: 'front' | '
   const showImage = side === 'front' && card.imageUrl;
   const showMermaid = side === 'back' && card.mermaid;
   const lookupUrl = side === 'front' ? cambridgeUrl(card.front) : null;
+  const partMeta = side === 'front' && card.wordPart ? wordPartMeta(card.wordPart) : null;
 
   return (
     <div className="flex h-full flex-col gap-5 overflow-y-auto">
       {side === 'back' ? (
         <MarkdownText text={text} />
       ) : (
-        <p className="whitespace-pre-wrap break-words text-xl leading-relaxed text-neutral-900 sm:text-2xl">
-          {text}
-        </p>
+        <div className="flex flex-col gap-3">
+          {partMeta && (
+            <span
+              className={`inline-flex w-fit items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${partMeta.badge}`}
+            >
+              <span aria-hidden>{partMeta.icon}</span>
+              {partMeta.label}
+            </span>
+          )}
+          <p className="whitespace-pre-wrap break-words text-xl leading-relaxed text-neutral-900 sm:text-2xl">
+            {text}
+          </p>
+        </div>
       )}
 
       {lookupUrl && (

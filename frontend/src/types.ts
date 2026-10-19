@@ -9,6 +9,7 @@ export interface Card {
   front: string;
   back: string;
   mermaid: string | null;
+  wordPart: WordPart | null;
   imageId: string | null;
   imageUrl: string | null;
   deckId: string | null;
@@ -19,6 +20,8 @@ export interface Card {
   createdAt: string;
   updatedAt: string;
 }
+
+export type WordPart = 'root' | 'prefix' | 'suffix';
 
 export interface Deck {
   id: string;
