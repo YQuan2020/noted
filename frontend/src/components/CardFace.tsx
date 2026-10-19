@@ -6,7 +6,9 @@ import Mermaid from './Mermaid';
  * Mermaid diagram (if any) belongs to the back.
  */
 export default function CardFace({ card, side }: { card: Card; side: 'front' | 'back' }) {
-  const text = side === 'front' ? card.front : card.back;
+  // Treat a literal "\n" (backslash-n) as a line break so both pasted newlines
+  // and hand-typed "\n" sequences render as multiple lines.
+  const text = (side === 'front' ? card.front : card.back).replace(/\\n/g, '\n');
   const showImage = side === 'front' && card.imageUrl;
   const showMermaid = side === 'back' && card.mermaid;
 

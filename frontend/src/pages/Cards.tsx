@@ -117,7 +117,7 @@ export default function Cards({
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-neutral-900">{c.front}</p>
-                  <p className="truncate text-sm text-neutral-400">{c.back}</p>
+                  <p className="truncate text-sm text-neutral-400">{c.back.replace(/\\n/g, ' ')}</p>
                 </div>
                 {c.reps > 0 && (
                   <span className="flex-none text-xs text-neutral-400">
