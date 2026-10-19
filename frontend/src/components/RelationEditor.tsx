@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import type { Card, Relation } from '../types';
+import RelationGraph from './RelationGraph';
 
 /**
  * Manage the relationships of one card. A relationship links this card to a
@@ -15,6 +16,7 @@ export default function RelationEditor({ cardId }: { cardId: string }) {
   const [label, setLabel] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showGraph, setShowGraph] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -68,7 +70,23 @@ export default function RelationEditor({ cardId }: { cardId: string }) {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-neutral-700">Relations</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-neutral-700">Relations</h3>
+        {relations.length > 0 && (
+          <button
+            onClick={() => setShowGraph((s) => !s)}
+            className="text-xs text-neutral-400 underline-offset-2 hover:text-neutral-700 hover:underline"
+          >
+            {showGraph ? 'Hide graph' : 'Graph'}
+          </button>
+        )}
+      </div>
+
+      {showGraph && relations.length > 0 && (
+        <div className="overflow-x-auto rounded-lg border border-neutral-100 p-3">
+          <RelationGraph relations={relations} />
+        </div>
+      )}
 
       {relations.length === 0 ? (
         <p className="text-sm text-neutral-400">No relations yet.</p>

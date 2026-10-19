@@ -16,6 +16,7 @@ diagrams, link related cards together, and review them with spaced repetition.
 | Image per card | Upload images via `POST /api/images`; attach with `imageId`. Stored on the backend. |
 | Swappable storage | `ImageStorage` interface with a `local` driver now and an `oss` stub ready to implement |
 | Card relationships | `POST /api/relations` links two cards and may reference a third card that *describes* the relation |
+| Relation graph | The **Graph** tab renders all card relationships as a Mermaid `flowchart` (nodes = cards, edges = relations; dotted `describes` edges mark relation-cards) |
 | Decks | Organize cards into decks (`Deck` model). Filter the card list and review queue by deck, assign a deck when creating/importing/editing, and study a single deck. |
 | Data to MySQL | Prisma models `User`, `Card`, `Image`, `CardRelation`, `Deck` |
 | Passwordless identity | Enter a unique username once → get a `uuid`. Stored client-side; sent as `X-User-Id`. |
@@ -146,8 +147,9 @@ backend/
 frontend/
   src/
     api.ts                   # typed API client
-    components/              # ReviewSession, CardEditor, RelationEditor, Mermaid, DeckPicker…
-    pages/                   # Welcome, Cards, Decks
+    lib/relations.ts         # relations → Mermaid flowchart generator
+    components/              # ReviewSession, CardEditor, RelationEditor, RelationGraph, Mermaid, DeckPicker…
+    pages/                   # Welcome, Cards, Decks, Graph
     App.tsx                  # shell + navigation
 docker-compose.yml
 ```
