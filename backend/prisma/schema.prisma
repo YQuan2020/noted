@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  cards     Card[]
+  images    Image[]
+  relations CardRelation[]
+  createdAt DateTime @default(now())
+}
+
+model Image {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storageKey   String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String?
+  createdAt    DateTime @default(now())
+
+  cards Card[]
+
+  @@index([userId])
+}
+
+model Card {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  front        String    @db.Text
+  back         String    @db.Text
+  mermaid      String?   @db.Text
+  imageId      String?
+  image        Image?    @relation(fields: [imageId], references: [id], onDelete: SetNull)
+
+  // Spaced-repetition scheduling (Anki-style, simplified)
+  due          DateTime?
+  intervalDays Float     @default(0)
+  ease         Float     @default(2.5)
+  reps         Int       @default(0)
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  relationsAsSource CardRelation[] @relation("SourceCard")
+  relationsAsTarget CardRelation[] @relation("TargetCard")
+  relationCards     CardRelation[] @relation("RelationCard")
+
+  @@index([userId])
+  @@index([userId, due])
+}
+
+model CardRelation {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceCardId   String
+  sourceCard     Card     @relation("SourceCard", fields: [sourceCardId], references: [id], onDelete: Cascade)
+  targetCardId   String
+  targetCard     Card     @relation("TargetCard", fields: [targetCardId], references: [id], onDelete: Cascade)
+  relationCardId String?
+  relationCard   Card?    @relation("RelationCard", fields: [relationCardId], references: [id], onDelete: SetNull)
+  label          String?
+  createdAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([sourceCardId])
+  @@index([targetCardId])
+}

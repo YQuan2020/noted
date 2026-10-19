@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/api.ts","./src/main.tsx","./src/types.ts","./src/components/cardeditor.tsx","./src/components/cardface.tsx","./src/components/mermaid.tsx","./src/components/relationeditor.tsx","./src/components/reviewsession.tsx","./src/pages/cards.tsx","./src/pages/welcome.tsx"],"version":"5.9.3"}
