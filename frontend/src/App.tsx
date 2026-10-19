@@ -139,15 +139,6 @@ export default function App() {
               {item.label}
             </button>
           ))}
-          <button
-            onClick={() => setView({ name: 'editor', cardId: null })}
-            className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs ${
-              view.name === 'editor' && view.cardId === null ? 'text-neutral-900' : 'text-neutral-400'
-            }`}
-          >
-            <span className="text-base leading-none">+</span>
-            New
-          </button>
         </div>
       </nav>
     </div>
