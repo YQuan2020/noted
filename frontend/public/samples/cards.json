@@ -1,0 +1,20 @@
+[
+  {
+    "front": "What is the capital of France?",
+    "back": "Paris",
+    "mermaid": "graph TD; A[France] --> B[Paris]"
+  },
+  {
+    "front": "What is the capital of Japan?",
+    "back": "Tokyo"
+  },
+  {
+    "front": "Write the photosynthesis equation",
+    "back": "6CO2 + 6H2O + light -> C6H12O6 + 6O2",
+    "mermaid": "graph LR; CO2[CO2] --> C[Sugar]; H2O[Water] --> C; C --> O2[Oxygen]"
+  },
+  {
+    "front": "What is the powerhouse of the cell?",
+    "back": "The mitochondrion"
+  }
+]

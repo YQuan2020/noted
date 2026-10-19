@@ -76,6 +76,12 @@ export const api = {
     imageId?: string | null;
   }) => request<{ card: Card }>('/cards', jsonInit('POST', data)),
 
+  importCards: (cards: Array<{ front: string; back: string; mermaid?: string | null }>) =>
+    request<{ imported: number; skipped: number; errors: Array<{ index: number; error: string }> }>(
+      '/cards/import',
+      jsonInit('POST', { cards }),
+    ),
+
   updateCard: (
     id: string,
     data: {

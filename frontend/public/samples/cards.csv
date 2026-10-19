@@ -1,0 +1,5 @@
+front,back,mermaid
+"What is the capital of France?","Paris","graph TD; A[France] --> B[Paris]"
+"What is the capital of Japan?","Tokyo",
+"Write the photosynthesis equation","6CO2 + 6H2O + light -> C6H12O6 + 6O2","graph LR; CO2[CO2] --> C[Sugar]; H2O[Water] --> C; C --> O2[Oxygen]"
+"What is the powerhouse of the cell?","The mitochondrion",

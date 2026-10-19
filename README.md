@@ -71,6 +71,33 @@ the three methods in `backend/src/storage/oss.ts` with your OSS/S3 SDK, then set
 `STORAGE_DRIVER=oss` plus the `OSS_*` variables. `save` should return the
 object's public URL so clients render images directly.
 
+## Batch import (JSON / CSV)
+
+The **Cards** screen has an **Import** button that accepts `.json` or `.csv`
+files (with downloadable samples). Both formats support the same fields:
+`front` (required), `back` (required), `mermaid` (optional).
+
+**JSON** — an array of objects, or an object with a `cards` array:
+
+```json
+[
+  { "front": "Capital of France?", "back": "Paris" },
+  { "front": "Photosynthesis", "back": "6CO2 + 6H2O -> C6H12O6 + 6O2", "mermaid": "graph TD; A-->B" }
+]
+```
+
+**CSV** — first row is the header; quote fields that contain commas or newlines:
+
+```csv
+front,back,mermaid
+"Capital of France?","Paris",
+"Photosynthesis","6CO2 + 6H2O -> C6H12O6 + 6O2","graph TD; A-->B"
+```
+
+Sample files ship with the app and are linked from the import panel:
+[`frontend/public/samples/cards.json`](frontend/public/samples/cards.json) and
+[`frontend/public/samples/cards.csv`](frontend/public/samples/cards.csv).
+
 ## API overview
 
 | Method | Path | Description |
@@ -80,6 +107,7 @@ object's public URL so clients render images directly.
 | `GET` | `/api/cards` | List cards (`?q=` search) |
 | `GET` | `/api/cards/review` | Cards due now |
 | `POST` | `/api/cards` | Create a card |
+| `POST` | `/api/cards/import` | Bulk-import cards (`{ "cards": [...] }`) |
 | `GET/PUT/DELETE` | `/api/cards/:id` | Read / update / delete a card |
 | `POST` | `/api/cards/:id/review` | Grade a card (`again/hard/good/easy`) |
 | `POST` | `/api/images` | Upload an image (multipart `file`) |

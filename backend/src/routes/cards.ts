@@ -120,6 +120,62 @@ cardsRouter.post('/', async (req, res) => {
   res.status(201).json({ card: toDto(card) });
 });
 
+/**
+ * POST /api/cards/import — bulk-create cards.
+ * Body: `{ "cards": [{ "front", "back", "mermaid"? }] }`.
+ * The frontend normalizes both JSON and CSV files into this shape.
+ */
+cardsRouter.post('/import', async (req, res) => {
+  const userId = res.locals.user.id;
+  const raw = req.body?.cards;
+
+  if (!Array.isArray(raw)) {
+    res.status(400).json({ error: 'body must contain a "cards" array' });
+    return;
+  }
+  if (raw.length === 0) {
+    res.status(400).json({ error: 'no cards to import' });
+    return;
+  }
+  if (raw.length > 1000) {
+    res.status(400).json({ error: 'too many cards (max 1000 per import)' });
+    return;
+  }
+
+  const data: Array<{
+    userId: string;
+    front: string;
+    back: string;
+    mermaid: string | null;
+    due: null;
+  }> = [];
+  const errors: Array<{ index: number; error: string }> = [];
+
+  for (let i = 0; i < raw.length; i++) {
+    const item = raw[i] ?? {};
+    const front = (item.front ?? '').toString().trim();
+    const back = (item.back ?? '').toString().trim();
+    const mermaid = item.mermaid ? item.mermaid.toString().trim() || null : null;
+
+    if (!front || !back) {
+      errors.push({ index: i, error: 'front and back are required' });
+      continue;
+    }
+
+    data.push({ userId, front, back, mermaid, due: null });
+  }
+
+  const imported = data.length
+    ? await prisma.card.createMany({ data })
+    : { count: 0 };
+
+  res.status(201).json({
+    imported: imported.count,
+    skipped: errors.length,
+    errors: errors.slice(0, 50),
+  });
+});
+
 /** PUT /api/cards/:id — update a card. */
 cardsRouter.put('/:id', async (req, res) => {
   const userId = res.locals.user.id;

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import type { Card } from '../types';
+import ImportCards from '../components/ImportCards';
 
 export default function Cards({
   onEdit,
@@ -12,6 +13,8 @@ export default function Cards({
   const [cards, setCards] = useState<Card[]>([]);
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showImport, setShowImport] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -22,19 +25,37 @@ export default function Cards({
         .finally(() => setLoading(false));
     }, 200);
     return () => clearTimeout(t);
-  }, [q]);
+  }, [q, refreshKey]);
 
   return (
     <div className="mx-auto w-full max-w-xl">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Cards</h2>
-        <button
-          onClick={onNew}
-          className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-700"
-        >
-          + New
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowImport((s) => !s)}
+            className={`rounded-md border px-3 py-1.5 text-sm font-medium ${
+              showImport
+                ? 'border-neutral-300 text-neutral-900'
+                : 'border-neutral-200 text-neutral-600 hover:border-neutral-300'
+            }`}
+          >
+            Import
+          </button>
+          <button
+            onClick={onNew}
+            className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-700"
+          >
+            + New
+          </button>
+        </div>
       </div>
+
+      {showImport && (
+        <div className="mb-5">
+          <ImportCards onImported={() => setRefreshKey((k) => k + 1)} />
+        </div>
+      )}
 
       <input
         value={q}
