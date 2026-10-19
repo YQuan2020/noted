@@ -1,0 +1,4 @@
+[
+  { "source": "arctic", "target": "antarctic", "label": "opposite" },
+  { "source": "ursa major", "target": "Polaris", "relation": "contains" }
+]

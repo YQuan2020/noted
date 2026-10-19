@@ -141,5 +141,18 @@ export const api = {
     label?: string | null;
   }) => request<{ relation: Relation }>('/relations', jsonInit('POST', data)),
 
+  importRelations: (
+    relations: Array<{
+      source: string;
+      target: string;
+      label?: string | null;
+      relation?: string | null;
+    }>,
+  ) =>
+    request<{ imported: number; skipped: number; errors: Array<{ index: number; error: string }> }>(
+      '/relations/import',
+      jsonInit('POST', { relations }),
+    ),
+
   deleteRelation: (id: string) => request<void>(`/relations/${id}`, { method: 'DELETE' }),
 };

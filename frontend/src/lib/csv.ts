@@ -4,6 +4,13 @@ export type ImportRow = {
   mermaid: string | null;
 };
 
+export type RelationImportRow = {
+  source: string;
+  target: string;
+  label: string | null;
+  relation: string | null;
+};
+
 /**
  * Minimal but correct CSV parser: handles quoted fields, embedded commas,
  * newlines, and escaped double-quotes (`""`). Returns a grid of cells.
@@ -110,6 +117,73 @@ export function rowsFromCsv(text: string): ImportRow[] {
     const mermaid = col.mermaid >= 0 ? get(col.mermaid) : '';
     if (!front && !back && !mermaid) continue; // skip blank lines
     rows.push({ front, back, mermaid: mermaid || null });
+  }
+  return rows;
+}
+
+const RELATION_HEADER_ALIASES: Record<string, keyof RelationImportRow> = {
+  source: 'source',
+  from: 'source',
+  target: 'target',
+  to: 'target',
+  label: 'label',
+  relation: 'relation',
+  relationcard: 'relation',
+};
+
+/** Parse JSON into relation rows. Accepts an array or `{ "relations": [...] }`. */
+export function relationRowsFromJson(text: string): RelationImportRow[] {
+  const data = JSON.parse(text);
+  const arr = Array.isArray(data) ? data : data?.relations;
+  if (!Array.isArray(arr)) {
+    throw new Error('JSON must be an array of relations, or an object with a "relations" array');
+  }
+  return arr.map((item: any, i: number) => {
+    const source = item?.source ?? item?.from ?? '';
+    const target = item?.target ?? item?.to ?? '';
+    if (typeof source !== 'string' || typeof target !== 'string') {
+      throw new Error(`Row ${i}: "source" and "target" must be strings`);
+    }
+    return {
+      source,
+      target,
+      label: item?.label ? String(item.label) : null,
+      relation: item?.relation ? String(item.relation) : null,
+    };
+  });
+}
+
+/** Parse CSV into relation rows using a `source,target,label,relation` header. */
+export function relationRowsFromCsv(text: string): RelationImportRow[] {
+  const grid = parseCsv(text);
+  if (grid.length === 0) throw new Error('CSV is empty');
+
+  const header = grid[0].map((h) => h.trim().toLowerCase());
+  const col: { source: number; target: number; label: number; relation: number } = {
+    source: -1,
+    target: -1,
+    label: -1,
+    relation: -1,
+  };
+  header.forEach((h, i) => {
+    const key = RELATION_HEADER_ALIASES[h];
+    if (key && col[key] === -1) col[key] = i;
+  });
+
+  if (col.source === -1 || col.target === -1) {
+    throw new Error('CSV must have "source" and "target" columns (first row is the header)');
+  }
+
+  const rows: RelationImportRow[] = [];
+  for (let i = 1; i < grid.length; i++) {
+    const line = grid[i];
+    const get = (idx: number) => (idx >= 0 && idx < line.length ? line[idx].trim() : '');
+    const source = get(col.source);
+    const target = get(col.target);
+    const label = col.label >= 0 ? get(col.label) : '';
+    const relation = col.relation >= 0 ? get(col.relation) : '';
+    if (!source && !target && !label && !relation) continue; // skip blank lines
+    rows.push({ source, target, label: label || null, relation: relation || null });
   }
   return rows;
 }

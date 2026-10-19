@@ -100,6 +100,34 @@ Sample files ship with the app and are linked from the import panel:
 [`frontend/public/samples/cards.json`](frontend/public/samples/cards.json) and
 [`frontend/public/samples/cards.csv`](frontend/public/samples/cards.csv).
 
+## Relations import (JSON / CSV)
+
+The **Relations** (Graph) screen has an **Import** button that bulk-creates card
+relationships. Cards are referenced by their exact `front` text (the most
+recently created card wins if fronts collide).
+
+**JSON** — an array of objects, or an object with a `relations` array:
+
+```json
+[
+  { "source": "arctic", "target": "antarctic", "label": "opposite" },
+  { "source": "ursa major", "target": "Polaris", "relation": "contains" }
+]
+```
+
+**CSV** — first row is the header:
+
+```csv
+source,target,label,relation
+arctic,antarctic,opposite,
+ursa major,Polaris,,contains
+```
+
+`source` and `target` are required; `label` names the relationship and
+`relation` is the front text of a card that *describes* the relationship.
+Sample files: [`relations.json`](frontend/public/samples/relations.json) and
+[`relations.csv`](frontend/public/samples/relations.csv).
+
 ## Decks
 
 The **Decks** screen lists *All decks*, *Unfiled*, and every deck you create,
@@ -130,6 +158,7 @@ an *All decks* and *Unfiled* option).
 | `POST` | `/api/images` | Upload an image (multipart `file`) |
 | `GET/DELETE` | `/api/images/:id` | Stream / delete an image |
 | `GET/POST` | `/api/relations` | List / create relations |
+| `POST` | `/api/relations/import` | Bulk-import relations (`{ "relations": [{ source, target, label?, relation? }] }`, cards matched by `front`) |
 | `DELETE` | `/api/relations/:id` | Delete a relation |
 
 Authenticated routes expect the `X-User-Id` header.
