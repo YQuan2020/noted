@@ -16,7 +16,8 @@ diagrams, link related cards together, and review them with spaced repetition.
 | Image per card | Upload images via `POST /api/images`; attach with `imageId`. Stored on the backend. |
 | Swappable storage | `ImageStorage` interface with a `local` driver now and an `oss` stub ready to implement |
 | Card relationships | `POST /api/relations` links two cards and may reference a third card that *describes* the relation |
-| Data to MySQL | Prisma models `User`, `Card`, `Image`, `CardRelation` |
+| Decks | Organize cards into decks (`Deck` model). Filter the card list and review queue by deck, assign a deck when creating/importing/editing, and study a single deck. |
+| Data to MySQL | Prisma models `User`, `Card`, `Image`, `CardRelation`, `Deck` |
 | Passwordless identity | Enter a unique username once → get a `uuid`. Stored client-side; sent as `X-User-Id`. |
 | Mermaid diagrams | Paste Mermaid text on a card; rendered client-side with mermaid.js |
 | English default | All UI copy is English |
@@ -98,18 +99,33 @@ Sample files ship with the app and are linked from the import panel:
 [`frontend/public/samples/cards.json`](frontend/public/samples/cards.json) and
 [`frontend/public/samples/cards.csv`](frontend/public/samples/cards.csv).
 
+## Decks
+
+The **Decks** screen lists *All decks*, *Unfiled*, and every deck you create,
+each with its card and due counts. From there you can **Open** a deck (to browse
+its cards) or **Study** it (to review only its due cards). Create, rename, and
+delete decks inline — deleting a deck leaves its cards intact, just unfiled.
+
+Cards are assigned to a deck via the **Deck** selector in the card editor, the
+**Import into** selector on the import panel, or by filtering first and creating
+in-place. The card list and review session both expose a deck filter (including
+an *All decks* and *Unfiled* option).
+
 ## API overview
 
 | Method | Path | Description |
 | --- | --- | --- |
 | `POST` | `/api/users` | Create (or fetch) a user by unique username |
 | `GET` | `/api/users/me` | Current user (via `X-User-Id`) |
-| `GET` | `/api/cards` | List cards (`?q=` search) |
-| `GET` | `/api/cards/review` | Cards due now |
-| `POST` | `/api/cards` | Create a card |
-| `POST` | `/api/cards/import` | Bulk-import cards (`{ "cards": [...] }`) |
-| `GET/PUT/DELETE` | `/api/cards/:id` | Read / update / delete a card |
+| `GET` | `/api/cards` | List cards (`?q=` search, `?deckId=` filter: id / `none` for unfiled) |
+| `GET` | `/api/cards/review` | Cards due now (same `?deckId=` filter) |
+| `POST` | `/api/cards` | Create a card (optional `deckId`) |
+| `POST` | `/api/cards/import` | Bulk-import cards (`{ "cards": [...], "deckId" }`) |
+| `GET/PUT/DELETE` | `/api/cards/:id` | Read / update / delete a card (update accepts `deckId`) |
 | `POST` | `/api/cards/:id/review` | Grade a card (`again/hard/good/easy`) |
+| `GET` | `/api/decks` | List decks with card/due counts and totals |
+| `POST` | `/api/decks` | Create a deck (`{ "name" }`) |
+| `PUT/DELETE` | `/api/decks/:id` | Rename / delete a deck (cards become unfiled) |
 | `POST` | `/api/images` | Upload an image (multipart `file`) |
 | `GET/DELETE` | `/api/images/:id` | Stream / delete an image |
 | `GET/POST` | `/api/relations` | List / create relations |
@@ -123,15 +139,15 @@ Authenticated routes expect the `X-User-Id` header.
 backend/
   prisma/schema.prisma       # data model
   src/
-    routes/                  # users, cards, images, relations
+    routes/                  # users, cards, images, relations, decks
     storage/                 # ImageStorage interface + local/oss drivers
     middleware/auth.ts       # X-User-Id middleware
     scheduler.ts             # simplified SM-2
 frontend/
   src/
     api.ts                   # typed API client
-    components/              # ReviewSession, CardEditor, RelationEditor, Mermaid…
-    pages/                   # Welcome, Cards
+    components/              # ReviewSession, CardEditor, RelationEditor, Mermaid, DeckPicker…
+    pages/                   # Welcome, Cards, Decks
     App.tsx                  # shell + navigation
 docker-compose.yml
 ```

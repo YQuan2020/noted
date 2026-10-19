@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import type { Card, Grade } from '../types';
 import CardFace from './CardFace';
+import DeckPicker from './DeckPicker';
 
 const GRADES: { key: Grade; label: string; short: string; className: string }[] = [
   { key: 'again', label: 'Again', short: '1', className: 'text-red-600 border-red-200 hover:bg-red-50' },
@@ -13,21 +14,24 @@ const GRADES: { key: Grade; label: string; short: string; className: string }[] 
 export default function ReviewSession({
   onEdit,
   onEmpty,
+  initialDeckId,
 }: {
   onEdit: (id: string) => void;
   onEmpty?: () => void;
+  initialDeckId?: string | null;
 }) {
   const [queue, setQueue] = useState<Card[]>([]);
   const [total, setTotal] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deckId, setDeckId] = useState<string | null | undefined>(initialDeckId);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.getReview();
+      const res = await api.getReview(deckId);
       setQueue(res.cards);
       setTotal(res.total);
       setFlipped(false);
@@ -36,7 +40,7 @@ export default function ReviewSession({
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [deckId]);
 
   useEffect(() => {
     load();
@@ -114,6 +118,8 @@ export default function ReviewSession({
 
   return (
     <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
+      <DeckPicker value={deckId} onChange={setDeckId} includeAll className="w-full" />
+
       <div className="flex items-center justify-between text-sm text-neutral-400">
         <span>
           {done} of {Math.max(total, queue.length + done)} done

@@ -1,17 +1,21 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import type { Card } from '../types';
+import DeckPicker from '../components/DeckPicker';
 import ImportCards from '../components/ImportCards';
 
 export default function Cards({
   onEdit,
   onNew,
+  initialDeckId,
 }: {
   onEdit: (id: string) => void;
   onNew: () => void;
+  initialDeckId?: string | null;
 }) {
   const [cards, setCards] = useState<Card[]>([]);
   const [q, setQ] = useState('');
+  const [deckId, setDeckId] = useState<string | null | undefined>(initialDeckId);
   const [loading, setLoading] = useState(true);
   const [showImport, setShowImport] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -19,13 +23,13 @@ export default function Cards({
   useEffect(() => {
     const t = setTimeout(() => {
       api
-        .listCards(q.trim() || undefined)
+        .listCards(q.trim() || undefined, deckId)
         .then((r) => setCards(r.cards))
         .catch(() => undefined)
         .finally(() => setLoading(false));
     }, 200);
     return () => clearTimeout(t);
-  }, [q, refreshKey]);
+  }, [q, deckId, refreshKey]);
 
   return (
     <div className="mx-auto w-full max-w-xl">
@@ -53,24 +57,30 @@ export default function Cards({
 
       {showImport && (
         <div className="mb-5">
-          <ImportCards onImported={() => setRefreshKey((k) => k + 1)} />
+          <ImportCards
+            defaultDeckId={deckId === undefined ? null : deckId}
+            onImported={() => setRefreshKey((k) => k + 1)}
+          />
         </div>
       )}
 
-      <input
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Search cards…"
-        className="mb-4 w-full rounded-lg border border-neutral-200 px-3 py-2 text-base focus:border-neutral-400 focus:outline-none"
-      />
+      <div className="mb-4 flex items-center gap-2">
+        <DeckPicker value={deckId} onChange={setDeckId} includeAll className="flex-1" />
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search…"
+          className="w-32 rounded-lg border border-neutral-200 px-3 py-1.5 text-base focus:border-neutral-400 focus:outline-none sm:w-40"
+        />
+      </div>
 
       {loading ? (
         <p className="py-16 text-center text-neutral-400">Loading…</p>
       ) : cards.length === 0 ? (
         <div className="py-16 text-center">
-          <p className="text-neutral-500">No cards yet.</p>
+          <p className="text-neutral-500">No cards here.</p>
           <button onClick={onNew} className="mt-3 text-sm text-neutral-700 underline underline-offset-2">
-            Create your first card
+            Create a card
           </button>
         </div>
       ) : (

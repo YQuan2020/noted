@@ -1,9 +1,17 @@
 import { useRef, useState } from 'react';
 import { api } from '../api';
 import { rowsFromCsv, rowsFromJson, type ImportRow } from '../lib/csv';
+import DeckPicker from './DeckPicker';
 
-export default function ImportCards({ onImported }: { onImported: () => void }) {
+export default function ImportCards({
+  onImported,
+  defaultDeckId = null,
+}: {
+  onImported: () => void;
+  defaultDeckId?: string | null;
+}) {
   const [rows, setRows] = useState<ImportRow[] | null>(null);
+  const [deckId, setDeckId] = useState<string | null>(defaultDeckId);
   const [fileName, setFileName] = useState('');
   const [parseError, setParseError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
@@ -51,7 +59,7 @@ export default function ImportCards({ onImported }: { onImported: () => void }) 
     setError(null);
     setResult(null);
     try {
-      const res = await api.importCards(valid);
+      const res = await api.importCards(valid, deckId);
       setResult(`Imported ${res.imported} card${res.imported === 1 ? '' : 's'}.`);
       if (res.skipped > 0) setResult(`Imported ${res.imported}. ${res.skipped} skipped.`);
       setRows(null);
@@ -85,6 +93,11 @@ export default function ImportCards({ onImported }: { onImported: () => void }) 
         CSV needs a header row with <code className="text-neutral-600">front,back,mermaid</code> columns.
         JSON is an array of <code className="text-neutral-600">{'{ "front", "back", "mermaid" }'}</code> objects.
       </p>
+
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-neutral-600">Import into</span>
+        <DeckPicker value={deckId} onChange={(v) => setDeckId(v ?? null)} className="flex-1" />
+      </div>
 
       <label className="flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-neutral-300 px-4 py-6 text-sm text-neutral-400 hover:border-neutral-400 hover:text-neutral-600">
         <input

@@ -11,12 +11,30 @@ export interface Card {
   mermaid: string | null;
   imageId: string | null;
   imageUrl: string | null;
+  deckId: string | null;
   due: string | null;
   intervalDays: number;
   ease: number;
   reps: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Deck {
+  id: string;
+  name: string;
+  cardCount: number;
+  dueCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DecksResponse {
+  decks: Deck[];
+  stats: {
+    total: { cardCount: number; dueCount: number };
+    unfiled: { cardCount: number; dueCount: number };
+  };
 }
 
 export interface ImageRecord {

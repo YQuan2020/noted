@@ -9,12 +9,32 @@ cardsRouter.use(requireUser);
 
 const GRADES: Grade[] = ['again', 'hard', 'good', 'easy'];
 
+/** Translate a `?deckId=` value into a Prisma `where` fragment. */
+function deckWhere(deckId: unknown): Record<string, unknown> {
+  if (deckId === undefined || deckId === '' || deckId === 'all') return {};
+  if (deckId === 'none' || deckId === 'null') return { deckId: null };
+  return { deckId: String(deckId) };
+}
+
+/** Validate a deck id from a request body; returns the id or null (unfiled). */
+async function resolveDeckId(userId: string, deckId: unknown): Promise<string | null> {
+  if (deckId === undefined || deckId === null || deckId === '' || deckId === 'none') return null;
+  const deck = await prisma.deck.findFirst({ where: { id: String(deckId), userId } });
+  if (!deck) {
+    const err: any = new Error('Deck not found');
+    err.status = 400;
+    throw err;
+  }
+  return deck.id;
+}
+
 interface CardWithImage {
   id: string;
   front: string;
   back: string;
   mermaid: string | null;
   imageId: string | null;
+  deckId: string | null;
   due: Date | null;
   intervalDays: number;
   ease: number;
@@ -36,7 +56,7 @@ cardsRouter.get('/', async (req, res) => {
   const q = (req.query.q as string | undefined)?.trim();
   const limit = Math.min(Number(req.query.limit) || 200, 500);
 
-  const where: any = { userId };
+  const where: any = { userId, ...deckWhere(req.query.deckId) };
   if (q) {
     where.OR = [
       { front: { contains: q } },
@@ -60,15 +80,17 @@ cardsRouter.get('/review', async (req, res) => {
   const limit = Math.min(Number(req.query.limit) || 20, 100);
   const now = new Date();
 
+  const deckFilter = deckWhere(req.query.deckId);
+
   const cards = await prisma.card.findMany({
-    where: { userId, OR: [{ due: null }, { due: { lte: now } }] },
+    where: { userId, ...deckFilter, OR: [{ due: null }, { due: { lte: now } }] },
     orderBy: [{ due: 'asc' }, { createdAt: 'asc' }],
     take: limit,
     include: { image: true },
   });
 
   const totalDue = await prisma.card.count({
-    where: { userId, OR: [{ due: null }, { due: { lte: now } }] },
+    where: { userId, ...deckFilter, OR: [{ due: null }, { due: { lte: now } }] },
   });
 
   res.json({ cards: cards.map(toDto), total: totalDue });
@@ -91,7 +113,7 @@ cardsRouter.get('/:id', async (req, res) => {
 /** POST /api/cards — create a card. */
 cardsRouter.post('/', async (req, res) => {
   const userId = res.locals.user.id;
-  const { front, back, mermaid, imageId } = req.body ?? {};
+  const { front, back, mermaid, imageId, deckId } = req.body ?? {};
 
   if (!front?.toString().trim() || !back?.toString().trim()) {
     res.status(400).json({ error: 'front and back are required' });
@@ -106,6 +128,14 @@ cardsRouter.post('/', async (req, res) => {
     }
   }
 
+  let nextDeckId: string | null;
+  try {
+    nextDeckId = await resolveDeckId(userId, deckId);
+  } catch (err: any) {
+    res.status(err.status ?? 400).json({ error: err.message });
+    return;
+  }
+
   const card = await prisma.card.create({
     data: {
       userId,
@@ -113,6 +143,7 @@ cardsRouter.post('/', async (req, res) => {
       back: back.toString(),
       mermaid: mermaid?.toString() || null,
       imageId: imageId || null,
+      deckId: nextDeckId,
       due: null,
     },
     include: { image: true },
@@ -127,7 +158,7 @@ cardsRouter.post('/', async (req, res) => {
  */
 cardsRouter.post('/import', async (req, res) => {
   const userId = res.locals.user.id;
-  const raw = req.body?.cards;
+  const { cards: raw, deckId } = req.body ?? {};
 
   if (!Array.isArray(raw)) {
     res.status(400).json({ error: 'body must contain a "cards" array' });
@@ -142,11 +173,20 @@ cardsRouter.post('/import', async (req, res) => {
     return;
   }
 
+  let nextDeckId: string | null;
+  try {
+    nextDeckId = await resolveDeckId(userId, deckId);
+  } catch (err: any) {
+    res.status(err.status ?? 400).json({ error: err.message });
+    return;
+  }
+
   const data: Array<{
     userId: string;
     front: string;
     back: string;
     mermaid: string | null;
+    deckId: string | null;
     due: null;
   }> = [];
   const errors: Array<{ index: number; error: string }> = [];
@@ -162,7 +202,7 @@ cardsRouter.post('/import', async (req, res) => {
       continue;
     }
 
-    data.push({ userId, front, back, mermaid, due: null });
+    data.push({ userId, front, back, mermaid, deckId: nextDeckId, due: null });
   }
 
   const imported = data.length
@@ -180,7 +220,7 @@ cardsRouter.post('/import', async (req, res) => {
 cardsRouter.put('/:id', async (req, res) => {
   const userId = res.locals.user.id;
   const id = req.params.id;
-  const { front, back, mermaid, imageId } = req.body ?? {};
+  const { front, back, mermaid, imageId, deckId } = req.body ?? {};
 
   const existing = await prisma.card.findFirst({ where: { id, userId } });
   if (!existing) {
@@ -205,6 +245,14 @@ cardsRouter.put('/:id', async (req, res) => {
   if (back !== undefined) data.back = back.toString();
   if (mermaid !== undefined) data.mermaid = mermaid?.toString() || null;
   if (nextImageId !== undefined) data.imageId = nextImageId;
+  if (deckId !== undefined) {
+    try {
+      data.deckId = await resolveDeckId(userId, deckId);
+    } catch (err: any) {
+      res.status(err.status ?? 400).json({ error: err.message });
+      return;
+    }
+  }
 
   const card = await prisma.card.update({
     where: { id },

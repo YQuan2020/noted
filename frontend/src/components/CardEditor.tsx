@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import Mermaid from './Mermaid';
 import RelationEditor from './RelationEditor';
+import DeckPicker from './DeckPicker';
 
 export default function CardEditor({
   cardId,
@@ -16,6 +17,7 @@ export default function CardEditor({
   const [mermaid, setMermaid] = useState('');
   const [imageId, setImageId] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [deckId, setDeckId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +38,7 @@ export default function CardEditor({
           setMermaid(card.mermaid ?? '');
           setImageId(card.imageId);
           setImageUrl(card.imageUrl);
+          setDeckId(card.deckId);
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load card');
@@ -81,6 +84,7 @@ export default function CardEditor({
         back: back.trim(),
         mermaid: mermaid.trim() || null,
         imageId: imageId ?? null,
+        deckId: deckId ?? null,
       };
       if (cardId) {
         await api.updateCard(cardId, payload);
@@ -125,6 +129,11 @@ export default function CardEditor({
           {error}
         </p>
       )}
+
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-neutral-600">Deck</span>
+        <DeckPicker value={deckId} onChange={(v) => setDeckId(v ?? null)} />
+      </label>
 
       <label className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-neutral-600">Front (question)</span>

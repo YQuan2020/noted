@@ -3,15 +3,19 @@ import { api, clearStoredUser, getStoredUser } from './api';
 import CardEditor from './components/CardEditor';
 import ReviewSession from './components/ReviewSession';
 import Cards from './pages/Cards';
+import Decks from './pages/Decks';
 import Welcome from './pages/Welcome';
 import type { User } from './types';
 
 type View =
-  | { name: 'review' | 'cards' }
+  | { name: 'review'; deckId?: string | null }
+  | { name: 'cards'; deckId?: string | null }
+  | { name: 'decks' }
   | { name: 'editor'; cardId: string | null };
 
-const NAV: { key: 'review' | 'cards'; label: string; icon: string }[] = [
+const NAV: { key: 'review' | 'decks' | 'cards'; label: string; icon: string }[] = [
   { key: 'review', label: 'Review', icon: '▣' },
+  { key: 'decks', label: 'Decks', icon: '▤' },
   { key: 'cards', label: 'Cards', icon: '☰' },
 ];
 
@@ -82,10 +86,22 @@ export default function App() {
 
       <main className="mx-auto w-full max-w-xl flex-1 px-5 py-6 pb-24">
         {view.name === 'review' && (
-          <ReviewSession onEdit={(id) => setView({ name: 'editor', cardId: id })} />
+          <ReviewSession
+            key={`review:${view.deckId ?? 'all'}`}
+            initialDeckId={view.deckId}
+            onEdit={(id) => setView({ name: 'editor', cardId: id })}
+          />
+        )}
+        {view.name === 'decks' && (
+          <Decks
+            onOpen={(deckId) => setView({ name: 'cards', deckId })}
+            onStudy={(deckId) => setView({ name: 'review', deckId })}
+          />
         )}
         {view.name === 'cards' && (
           <Cards
+            key={`cards:${view.deckId ?? 'all'}`}
+            initialDeckId={view.deckId}
             onEdit={(id) => setView({ name: 'editor', cardId: id })}
             onNew={() => setView({ name: 'editor', cardId: null })}
           />
@@ -100,7 +116,15 @@ export default function App() {
           {NAV.map((item) => (
             <button
               key={item.key}
-              onClick={() => setView({ name: item.key })}
+              onClick={() => {
+                const next: View =
+                  item.key === 'review'
+                    ? { name: 'review' }
+                    : item.key === 'cards'
+                      ? { name: 'cards' }
+                      : { name: 'decks' };
+                setView(next);
+              }}
               className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs ${
                 view.name === item.key ? 'text-neutral-900' : 'text-neutral-400'
               }`}

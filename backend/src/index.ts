@@ -2,6 +2,7 @@ import cors from 'cors';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import { config } from './config';
 import { cardsRouter } from './routes/cards';
+import { decksRouter } from './routes/decks';
 import { imagesRouter } from './routes/images';
 import { relationsRouter } from './routes/relations';
 import { usersRouter } from './routes/users';
@@ -17,6 +18,7 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/users', usersRouter);
 app.use('/api/cards', cardsRouter);
+app.use('/api/decks', decksRouter);
 app.use('/api/images', imagesRouter);
 app.use('/api/relations', relationsRouter);
 

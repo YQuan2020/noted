@@ -1,4 +1,4 @@
-import type { Card, Grade, ImageRecord, Relation, User } from './types';
+import type { Card, Deck, DecksResponse, Grade, ImageRecord, Relation, User } from './types';
 
 const USER_KEY = 'noted.user';
 
@@ -61,11 +61,21 @@ export const api = {
 
   getMe: () => request<{ user: User }>('/users/me'),
 
-  listCards: (q?: string) =>
-    request<{ cards: Card[] }>(`/cards${q ? `?q=${encodeURIComponent(q)}` : ''}`),
+  listCards: (q?: string, deckId?: string | null) => {
+    const p = new URLSearchParams();
+    if (q) p.set('q', q);
+    if (deckId === null) p.set('deckId', 'none');
+    else if (deckId) p.set('deckId', deckId);
+    const s = p.toString();
+    return request<{ cards: Card[] }>(`/cards${s ? `?${s}` : ''}`);
+  },
 
-  getReview: (limit = 20) =>
-    request<{ cards: Card[]; total: number }>(`/cards/review?limit=${limit}`),
+  getReview: (deckId?: string | null, limit = 20) => {
+    const p = new URLSearchParams({ limit: String(limit) });
+    if (deckId === null) p.set('deckId', 'none');
+    else if (deckId) p.set('deckId', deckId);
+    return request<{ cards: Card[]; total: number }>(`/cards/review?${p.toString()}`);
+  },
 
   getCard: (id: string) => request<{ card: Card }>(`/cards/${id}`),
 
@@ -74,12 +84,16 @@ export const api = {
     back: string;
     mermaid?: string | null;
     imageId?: string | null;
+    deckId?: string | null;
   }) => request<{ card: Card }>('/cards', jsonInit('POST', data)),
 
-  importCards: (cards: Array<{ front: string; back: string; mermaid?: string | null }>) =>
+  importCards: (
+    cards: Array<{ front: string; back: string; mermaid?: string | null }>,
+    deckId?: string | null,
+  ) =>
     request<{ imported: number; skipped: number; errors: Array<{ index: number; error: string }> }>(
       '/cards/import',
-      jsonInit('POST', { cards }),
+      jsonInit('POST', { cards, deckId }),
     ),
 
   updateCard: (
@@ -89,6 +103,7 @@ export const api = {
       back?: string;
       mermaid?: string | null;
       imageId?: string | null;
+      deckId?: string | null;
     },
   ) => request<{ card: Card }>(`/cards/${id}`, jsonInit('PUT', data)),
 
@@ -96,6 +111,15 @@ export const api = {
 
   reviewCard: (id: string, grade: Grade) =>
     request<{ card: Card }>(`/cards/${id}/review`, jsonInit('POST', { grade })),
+
+  listDecks: () => request<DecksResponse>('/decks'),
+
+  createDeck: (name: string) => request<{ deck: Deck }>('/decks', jsonInit('POST', { name })),
+
+  renameDeck: (id: string, name: string) =>
+    request<{ deck: Deck }>(`/decks/${id}`, jsonInit('PUT', { name })),
+
+  deleteDeck: (id: string) => request<void>(`/decks/${id}`, { method: 'DELETE' }),
 
   uploadImage: (file: File) => {
     const form = new FormData();
