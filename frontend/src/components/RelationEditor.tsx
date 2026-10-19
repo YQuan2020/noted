@@ -8,7 +8,13 @@ import RelationGraph from './RelationGraph';
  * target card and may reference a third "relation card" that describes the
  * relationship itself (that card is just a normal flashcard in the deck).
  */
-export default function RelationEditor({ cardId }: { cardId: string }) {
+export default function RelationEditor({
+  cardId,
+  onOpenCard,
+}: {
+  cardId: string;
+  onOpenCard?: (cardId: string) => void;
+}) {
   const [relations, setRelations] = useState<Relation[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
   const [targetId, setTargetId] = useState('');
@@ -84,7 +90,7 @@ export default function RelationEditor({ cardId }: { cardId: string }) {
 
       {showGraph && relations.length > 0 && (
         <div className="overflow-x-auto rounded-lg border border-neutral-100 p-3">
-          <RelationGraph relations={relations} />
+          <RelationGraph relations={relations} onOpen={onOpenCard} />
         </div>
       )}
 

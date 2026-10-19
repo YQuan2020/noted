@@ -101,7 +101,9 @@ export default function App() {
             onStudy={(deckId) => setView({ name: 'review', deckId })}
           />
         )}
-        {view.name === 'graph' && <Graph />}
+        {view.name === 'graph' && (
+          <Graph onOpenCard={(id) => setView({ name: 'editor', cardId: id })} />
+        )}
         {view.name === 'cards' && (
           <Cards
             key={`cards:${view.deckId ?? 'all'}`}
@@ -111,7 +113,11 @@ export default function App() {
           />
         )}
         {view.name === 'editor' && (
-          <CardEditor cardId={view.cardId} onDone={handleEditorDone} />
+          <CardEditor
+            cardId={view.cardId}
+            onDone={handleEditorDone}
+            onOpenCard={(id) => setView({ name: 'editor', cardId: id })}
+          />
         )}
       </main>
 

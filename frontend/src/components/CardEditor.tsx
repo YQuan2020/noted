@@ -7,10 +7,13 @@ import DeckPicker from './DeckPicker';
 export default function CardEditor({
   cardId,
   onDone,
+  onOpenCard,
 }: {
   cardId: string | null;
   /** Called after save/delete. Receives the new card id when one was created. */
   onDone: (createdId?: string) => void;
+  /** Open a different card (e.g. from the relation graph). */
+  onOpenCard?: (cardId: string) => void;
 }) {
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
@@ -230,7 +233,7 @@ export default function CardEditor({
         )}
       </div>
 
-      {cardId && <RelationEditor cardId={cardId} />}
+      {cardId && <RelationEditor cardId={cardId} onOpenCard={onOpenCard} />}
     </div>
   );
 }

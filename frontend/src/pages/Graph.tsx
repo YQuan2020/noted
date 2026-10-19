@@ -4,7 +4,7 @@ import type { Relation } from '../types';
 import RelationGraph from '../components/RelationGraph';
 import ImportRelations from '../components/ImportRelations';
 
-export default function Graph() {
+export default function Graph({ onOpenCard }: { onOpenCard: (cardId: string) => void }) {
   const [relations, setRelations] = useState<Relation[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showImport, setShowImport] = useState(false);
@@ -61,7 +61,7 @@ export default function Graph() {
             that describes a relation
           </p>
           <div className="overflow-x-auto rounded-lg border border-neutral-100 bg-white p-3">
-            <RelationGraph relations={relations} />
+            <RelationGraph relations={relations} onOpen={onOpenCard} />
           </div>
         </>
       )}

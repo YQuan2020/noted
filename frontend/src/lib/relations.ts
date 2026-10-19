@@ -36,6 +36,8 @@ export function relationsToMermaid(relations: Relation[]): string {
 
   for (const [id, front] of cards) {
     lines.push(`  ${nid.get(id)}["${esc(front)}"]`);
+    // Link each node to its card so the UI can open it on click.
+    lines.push(`  click ${nid.get(id)} href "#card/${id}"`);
   }
 
   for (const r of relations) {
