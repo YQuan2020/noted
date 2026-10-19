@@ -1,9 +1,11 @@
 import type { Card } from '../types';
+import MarkdownText from './MarkdownText';
 import Mermaid from './Mermaid';
 
 /**
  * Renders one side of a flashcard. The image belongs to the front; the
- * Mermaid diagram (if any) belongs to the back.
+ * Mermaid diagram (if any) belongs to the back. The back is rendered as
+ * Markdown so answers can be structured and highlighted.
  */
 export default function CardFace({ card, side }: { card: Card; side: 'front' | 'back' }) {
   // Treat a literal "\n" (backslash-n) as a line break so both pasted newlines
@@ -14,9 +16,13 @@ export default function CardFace({ card, side }: { card: Card; side: 'front' | '
 
   return (
     <div className="flex h-full flex-col gap-5 overflow-y-auto">
-      <p className="whitespace-pre-wrap break-words text-xl leading-relaxed text-neutral-900 sm:text-2xl">
-        {text}
-      </p>
+      {side === 'back' ? (
+        <MarkdownText text={text} />
+      ) : (
+        <p className="whitespace-pre-wrap break-words text-xl leading-relaxed text-neutral-900 sm:text-2xl">
+          {text}
+        </p>
+      )}
 
       {showImage && (
         <div className="flex justify-center">
