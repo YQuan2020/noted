@@ -24,6 +24,20 @@ function toWordPart(v: unknown): string | null {
   return s;
 }
 
+const ROOT_ORIGINS = ['latin', 'greek', 'germanic', 'oldEnglish'] as const;
+
+/** Normalize a `rootOrigin` value; returns null (unset) or throws 400. */
+function toRootOrigin(v: unknown): string | null {
+  if (v === undefined || v === null || v === '') return null;
+  const s = String(v);
+  if (!(ROOT_ORIGINS as readonly string[]).includes(s)) {
+    const err: any = new Error('rootOrigin must be one of: latin, greek, germanic, oldEnglish');
+    err.status = 400;
+    throw err;
+  }
+  return s;
+}
+
 /** Translate a `?deckId=` value into a Prisma `where` fragment. */
 function deckWhere(deckId: unknown): Record<string, unknown> {
   if (deckId === undefined || deckId === '' || deckId === 'all') return {};
@@ -49,6 +63,7 @@ interface CardWithImage {
   back: string;
   mermaid: string | null;
   wordPart: string | null;
+  rootOrigin: string | null;
   imageId: string | null;
   deckId: string | null;
   due: Date | null;
@@ -129,7 +144,7 @@ cardsRouter.get('/:id', async (req, res) => {
 /** POST /api/cards — create a card. */
 cardsRouter.post('/', async (req, res) => {
   const userId = res.locals.user.id;
-  const { front, back, mermaid, imageId, deckId, wordPart } = req.body ?? {};
+  const { front, back, mermaid, imageId, deckId, wordPart, rootOrigin } = req.body ?? {};
 
   if (!front?.toString().trim() || !back?.toString().trim()) {
     res.status(400).json({ error: 'front and back are required' });
@@ -146,9 +161,11 @@ cardsRouter.post('/', async (req, res) => {
 
   let nextDeckId: string | null;
   let nextWordPart: string | null;
+  let nextRootOrigin: string | null;
   try {
     nextDeckId = await resolveDeckId(userId, deckId);
     nextWordPart = toWordPart(wordPart);
+    nextRootOrigin = toRootOrigin(rootOrigin);
   } catch (err: any) {
     res.status(err.status ?? 400).json({ error: err.message });
     return;
@@ -161,6 +178,7 @@ cardsRouter.post('/', async (req, res) => {
       back: back.toString(),
       mermaid: mermaid?.toString() || null,
       wordPart: nextWordPart,
+      rootOrigin: nextRootOrigin,
       imageId: imageId || null,
       deckId: nextDeckId,
       due: null,
@@ -239,7 +257,7 @@ cardsRouter.post('/import', async (req, res) => {
 cardsRouter.put('/:id', async (req, res) => {
   const userId = res.locals.user.id;
   const id = req.params.id;
-  const { front, back, mermaid, imageId, deckId, wordPart } = req.body ?? {};
+  const { front, back, mermaid, imageId, deckId, wordPart, rootOrigin } = req.body ?? {};
 
   const existing = await prisma.card.findFirst({ where: { id, userId } });
   if (!existing) {
@@ -266,6 +284,14 @@ cardsRouter.put('/:id', async (req, res) => {
   if (wordPart !== undefined) {
     try {
       data.wordPart = toWordPart(wordPart);
+    } catch (err: any) {
+      res.status(err.status ?? 400).json({ error: err.message });
+      return;
+    }
+  }
+  if (rootOrigin !== undefined) {
+    try {
+      data.rootOrigin = toRootOrigin(rootOrigin);
     } catch (err: any) {
       res.status(err.status ?? 400).json({ error: err.message });
       return;

@@ -41,6 +41,7 @@ model Card {
   back         String    @db.Text
   mermaid      String?   @db.Text
   wordPart     String?
+  rootOrigin   String?
   imageId      String?
   image        Image?    @relation(fields: [imageId], references: [id], onDelete: SetNull)
   deckId       String?

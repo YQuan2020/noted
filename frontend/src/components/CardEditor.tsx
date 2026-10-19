@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
-import { WORD_PARTS } from '../lib/wordParts';
-import type { WordPart } from '../types';
+import { ROOT_ORIGINS, WORD_PARTS } from '../lib/wordParts';
+import type { RootOrigin, WordPart } from '../types';
 import Mermaid from './Mermaid';
 import RelationEditor from './RelationEditor';
 import DeckPicker from './DeckPicker';
@@ -24,6 +24,7 @@ export default function CardEditor({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [deckId, setDeckId] = useState<string | null>(null);
   const [wordPart, setWordPart] = useState<WordPart | null>(null);
+  const [rootOrigin, setRootOrigin] = useState<RootOrigin | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +47,7 @@ export default function CardEditor({
           setImageUrl(card.imageUrl);
           setDeckId(card.deckId);
           setWordPart(card.wordPart);
+          setRootOrigin(card.rootOrigin);
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load card');
@@ -91,6 +93,7 @@ export default function CardEditor({
         back: back.trim(),
         mermaid: mermaid.trim() || null,
         wordPart: wordPart ?? null,
+        rootOrigin: rootOrigin ?? null,
         imageId: imageId ?? null,
         deckId: deckId ?? null,
       };
@@ -121,6 +124,12 @@ export default function CardEditor({
       setError(e instanceof Error ? e.message : 'Failed to delete card');
       setDeleting(false);
     }
+  };
+
+  const selectWordPart = (p: WordPart | null) => {
+    setWordPart(p);
+    // Origin only applies to roots; clear it when leaving root.
+    if (p !== 'root') setRootOrigin(null);
   };
 
   return (
@@ -163,7 +172,7 @@ export default function CardEditor({
               <button
                 key={p.key}
                 type="button"
-                onClick={() => setWordPart(active ? null : p.key)}
+                onClick={() => selectWordPart(active ? null : p.key)}
                 className={`flex flex-1 items-center justify-center gap-1 rounded-md border px-3 py-2 text-sm transition-colors ${
                   active
                     ? 'border-neutral-900 bg-neutral-900 text-white'
@@ -177,6 +186,31 @@ export default function CardEditor({
           })}
         </div>
       </div>
+
+      {wordPart === 'root' && (
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-neutral-600">Root origin (optional)</span>
+          <div className="flex flex-wrap gap-2">
+            {ROOT_ORIGINS.map((o) => {
+              const active = rootOrigin === o.key;
+              return (
+                <button
+                  key={o.key}
+                  type="button"
+                  onClick={() => setRootOrigin(active ? null : o.key)}
+                  className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
+                    active
+                      ? 'border-neutral-900 bg-neutral-900 text-white'
+                      : 'border-neutral-200 text-neutral-600 hover:border-neutral-300'
+                  }`}
+                >
+                  {o.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <label className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-neutral-600">Back (answer)</span>

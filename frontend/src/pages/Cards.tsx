@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
-import { wordPartMeta } from '../lib/wordParts';
+import { rootOriginLabel, wordPartMeta } from '../lib/wordParts';
 import type { Card } from '../types';
 import DeckPicker from '../components/DeckPicker';
 import ImportCards from '../components/ImportCards';
@@ -124,6 +124,9 @@ export default function Cards({
                       >
                         <span aria-hidden>{wordPartMeta(c.wordPart).icon}</span>
                         {wordPartMeta(c.wordPart).label}
+                        {c.wordPart === 'root' && c.rootOrigin
+                          ? ` · ${rootOriginLabel(c.rootOrigin)}`
+                          : ''}
                       </span>
                     )}
                     <span className="truncate">{c.front}</span>

@@ -1,4 +1,4 @@
-import type { WordPart } from '../types';
+import type { RootOrigin, WordPart } from '../types';
 
 interface WordPartMeta {
   key: WordPart;
@@ -35,4 +35,19 @@ export const WORD_PARTS: WordPartMeta[] = [
 
 export function wordPartMeta(key: WordPart): WordPartMeta {
   return WORD_PARTS.find((p) => p.key === key)!;
+}
+
+/**
+ * Optional etymology for a `root` word part: the language family the root
+ * comes from.
+ */
+export const ROOT_ORIGINS: { key: RootOrigin; label: string }[] = [
+  { key: 'latin', label: 'Latin' },
+  { key: 'greek', label: 'Greek' },
+  { key: 'germanic', label: 'Germanic' },
+  { key: 'oldEnglish', label: 'Old English' },
+];
+
+export function rootOriginLabel(key: RootOrigin): string {
+  return ROOT_ORIGINS.find((o) => o.key === key)?.label ?? key;
 }

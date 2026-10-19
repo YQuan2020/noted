@@ -1,6 +1,6 @@
 import type { Card } from '../types';
 import { cambridgeUrl } from '../lib/dictionary';
-import { wordPartMeta } from '../lib/wordParts';
+import { rootOriginLabel, wordPartMeta } from '../lib/wordParts';
 import MarkdownText from './MarkdownText';
 import Mermaid from './Mermaid';
 
@@ -31,6 +31,9 @@ export default function CardFace({ card, side }: { card: Card; side: 'front' | '
             >
               <span aria-hidden>{partMeta.icon}</span>
               {partMeta.label}
+              {partMeta.key === 'root' && card.rootOrigin
+                ? ` · ${rootOriginLabel(card.rootOrigin)}`
+                : ''}
             </span>
           )}
           <p className="whitespace-pre-wrap break-words text-xl leading-relaxed text-neutral-900 sm:text-2xl">

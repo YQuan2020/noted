@@ -10,6 +10,7 @@ export interface Card {
   back: string;
   mermaid: string | null;
   wordPart: WordPart | null;
+  rootOrigin: RootOrigin | null;
   imageId: string | null;
   imageUrl: string | null;
   deckId: string | null;
@@ -22,6 +23,8 @@ export interface Card {
 }
 
 export type WordPart = 'root' | 'prefix' | 'suffix';
+
+export type RootOrigin = 'latin' | 'greek' | 'germanic' | 'oldEnglish';
 
 export interface Deck {
   id: string;
