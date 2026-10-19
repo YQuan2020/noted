@@ -3,6 +3,7 @@ import { api, clearStoredUser, getStoredUser } from './api';
 import CardEditor from './components/CardEditor';
 import ReviewSession from './components/ReviewSession';
 import Cards from './pages/Cards';
+import CardView from './pages/CardView';
 import Decks from './pages/Decks';
 import Graph from './pages/Graph';
 import Welcome from './pages/Welcome';
@@ -13,6 +14,7 @@ type View =
   | { name: 'cards'; deckId?: string | null }
   | { name: 'decks' }
   | { name: 'graph' }
+  | { name: 'card'; cardId: string }
   | { name: 'editor'; cardId: string | null };
 
 const NAV: { key: 'review' | 'decks' | 'cards' | 'graph'; label: string; icon: string }[] = [
@@ -102,7 +104,14 @@ export default function App() {
           />
         )}
         {view.name === 'graph' && (
-          <Graph onOpenCard={(id) => setView({ name: 'editor', cardId: id })} />
+          <Graph onOpenCard={(id) => setView({ name: 'card', cardId: id })} />
+        )}
+        {view.name === 'card' && (
+          <CardView
+            cardId={view.cardId}
+            onEdit={(id) => setView({ name: 'editor', cardId: id })}
+            onDone={() => setView({ name: 'cards' })}
+          />
         )}
         {view.name === 'cards' && (
           <Cards
@@ -116,7 +125,7 @@ export default function App() {
           <CardEditor
             cardId={view.cardId}
             onDone={handleEditorDone}
-            onOpenCard={(id) => setView({ name: 'editor', cardId: id })}
+            onOpenCard={(id) => setView({ name: 'card', cardId: id })}
           />
         )}
       </main>
