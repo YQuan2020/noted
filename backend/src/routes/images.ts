@@ -7,7 +7,6 @@ import { requireUser } from '../middleware/auth';
 import { getStorage } from '../storage';
 
 export const imagesRouter = Router();
-imagesRouter.use(requireUser);
 
 const ALLOWED_MIME = new Set([
   'image/png',
@@ -40,7 +39,7 @@ const upload = multer({
  * POST /api/images — upload an image (multipart field "file").
  * Returns the image record; attach its id to a card via `imageId`.
  */
-imagesRouter.post('/', upload.single('file'), async (req, res) => {
+imagesRouter.post('/', requireUser, upload.single('file'), async (req, res) => {
   if (!req.file) {
     res.status(400).json({ error: 'file is required' });
     return;
@@ -71,11 +70,14 @@ imagesRouter.post('/', upload.single('file'), async (req, res) => {
 });
 
 /**
- * GET /api/images/:id — stream the image (local driver) or redirect (OSS).
+ * GET /api/images/:id — stream the file (local driver) or redirect (OSS).
+ *
+ * Served without the `X-User-Id` header: browser media tags (<img>/<video>/
+ * <audio>) cannot attach it. The id is an unguessable UUID, so this acts as a
+ * capability URL. Upload/delete remain authenticated.
  */
 imagesRouter.get('/:id', async (req, res) => {
-  const userId = res.locals.user.id;
-  const image = await prisma.image.findFirst({ where: { id: req.params.id, userId } });
+  const image = await prisma.image.findUnique({ where: { id: req.params.id } });
   if (!image) {
     res.status(404).json({ error: 'Image not found' });
     return;
@@ -94,7 +96,7 @@ imagesRouter.get('/:id', async (req, res) => {
 });
 
 /** DELETE /api/images/:id — remove an image and its stored bytes. */
-imagesRouter.delete('/:id', async (req, res) => {
+imagesRouter.delete('/:id', requireUser, async (req, res) => {
   const userId = res.locals.user.id;
   const image = await prisma.image.findFirst({ where: { id: req.params.id, userId } });
   if (!image) {

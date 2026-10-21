@@ -68,3 +68,21 @@ export interface Relation {
 }
 
 export type Grade = 'again' | 'hard' | 'good' | 'easy';
+
+export type MediaType = 'video' | 'audio' | 'article';
+
+export interface Media {
+  id: string;
+  type: MediaType;
+  title: string;
+  url: string | null;
+  notes: string | null;
+  content: string | null;
+  fileId: string | null;
+  fileUrl: string | null;
+  fileMimeType: string | null;
+  deckId: string | null;
+  deckName: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

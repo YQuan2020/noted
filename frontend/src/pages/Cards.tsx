@@ -6,11 +6,11 @@ import DeckPicker from '../components/DeckPicker';
 import ImportCards from '../components/ImportCards';
 
 export default function Cards({
-  onEdit,
+  onOpenCard,
   onNew,
   initialDeckId,
 }: {
-  onEdit: (id: string) => void;
+  onOpenCard: (id: string) => void;
   onNew: () => void;
   initialDeckId?: string | null;
 }) {
@@ -78,14 +78,16 @@ export default function Cards({
         </div>
       )}
 
-      <div className="mb-4 flex items-center gap-2">
-        <DeckPicker value={deckId} onChange={setDeckId} includeAll className="flex-1" />
+      <div className="mb-4">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search…"
-          className="w-32 rounded-lg border border-neutral-200 px-3 py-1.5 text-base focus:border-neutral-400 focus:outline-none sm:w-40"
+          placeholder="Search front…"
+          className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-base focus:border-neutral-400 focus:outline-none"
         />
+      </div>
+      <div className="mb-4">
+        <DeckPicker value={deckId} onChange={setDeckId} includeAll className="w-full" />
       </div>
 
       {loading ? (
@@ -102,7 +104,7 @@ export default function Cards({
           {cards.map((c) => (
             <li key={c.id} className="flex items-center gap-2">
               <button
-                onClick={() => onEdit(c.id)}
+                onClick={() => onOpenCard(c.id)}
                 className="flex min-w-0 flex-1 items-center gap-3 py-3 text-left hover:bg-neutral-50"
               >
                 {c.imageUrl ? (

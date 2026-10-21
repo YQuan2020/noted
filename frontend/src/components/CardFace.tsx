@@ -16,7 +16,7 @@ export default function CardFace({ card, side }: { card: Card; side: 'front' | '
   const text = (side === 'front' ? card.front : card.back).replace(/\\n/g, '\n');
   const showImage = side === 'front' && card.imageUrl;
   const showMermaid = side === 'back' && card.mermaid;
-  const lookupUrl = side === 'front' ? cambridgeUrl(card.front) : null;
+  const lookupUrl = side === 'back' ? cambridgeUrl(card.front) : null;
   const partMeta = side === 'front' && card.wordPart ? wordPartMeta(card.wordPart) : null;
 
   return (

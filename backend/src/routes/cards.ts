@@ -89,11 +89,7 @@ cardsRouter.get('/', async (req, res) => {
 
   const where: any = { userId, ...deckWhere(req.query.deckId) };
   if (q) {
-    where.OR = [
-      { front: { contains: q } },
-      { back: { contains: q } },
-      { mermaid: { contains: q } },
-    ];
+    where.front = { contains: q };
   }
 
   const cards = await prisma.card.findMany({

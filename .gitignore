@@ -6,6 +6,9 @@ dist/
 build/
 *.tsbuildinfo
 
+# Docker image tarballs (docker save) — deploy artifacts, not source
+*.tar
+
 # Environment
 .env
 .env.local

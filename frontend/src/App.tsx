@@ -6,6 +6,7 @@ import Cards from './pages/Cards';
 import CardView from './pages/CardView';
 import Decks from './pages/Decks';
 import Graph from './pages/Graph';
+import Media from './pages/Media';
 import Welcome from './pages/Welcome';
 import type { User } from './types';
 
@@ -14,13 +15,14 @@ type View =
   | { name: 'cards'; deckId?: string | null }
   | { name: 'decks' }
   | { name: 'graph' }
-  | { name: 'card'; cardId: string }
-  | { name: 'editor'; cardId: string | null };
+  | { name: 'media' }
+  | { name: 'card'; cardId: string; deckId?: string | null }
+  | { name: 'editor'; cardId: string | null; deckId?: string | null };
 
-const NAV: { key: 'review' | 'decks' | 'cards' | 'graph'; label: string; icon: string }[] = [
+const NAV: { key: 'review' | 'decks' | 'media' | 'graph'; label: string; icon: string }[] = [
   { key: 'review', label: 'Review', icon: '▣' },
   { key: 'decks', label: 'Decks', icon: '▤' },
-  { key: 'cards', label: 'Cards', icon: '☰' },
+  { key: 'media', label: 'Media', icon: '▶' },
   { key: 'graph', label: 'Graph', icon: '⑃' },
 ];
 
@@ -66,8 +68,9 @@ export default function App() {
   };
 
   const handleEditorDone = (createdId?: string) => {
-    if (createdId) setView({ name: 'editor', cardId: createdId });
-    else setView({ name: 'cards' });
+    const deckId = view.name === 'editor' ? view.deckId : undefined;
+    if (createdId) setView({ name: 'editor', cardId: createdId, deckId });
+    else setView(deckId ? { name: 'cards', deckId } : { name: 'cards' });
   };
 
   return (
@@ -106,26 +109,30 @@ export default function App() {
         {view.name === 'graph' && (
           <Graph onOpenCard={(id) => setView({ name: 'card', cardId: id })} />
         )}
+        {view.name === 'media' && <Media />}
         {view.name === 'card' && (
           <CardView
             cardId={view.cardId}
-            onEdit={(id) => setView({ name: 'editor', cardId: id })}
-            onDone={() => setView({ name: 'cards' })}
+            onEdit={(id) => setView({ name: 'editor', cardId: id, deckId: view.deckId })}
+            onDone={() =>
+              setView(view.deckId ? { name: 'cards', deckId: view.deckId } : { name: 'cards' })
+            }
           />
         )}
         {view.name === 'cards' && (
           <Cards
             key={`cards:${view.deckId ?? 'all'}`}
             initialDeckId={view.deckId}
-            onEdit={(id) => setView({ name: 'editor', cardId: id })}
-            onNew={() => setView({ name: 'editor', cardId: null })}
+            onOpenCard={(id) => setView({ name: 'card', cardId: id, deckId: view.deckId })}
+            onNew={() => setView({ name: 'editor', cardId: null, deckId: view.deckId })}
           />
         )}
         {view.name === 'editor' && (
           <CardEditor
             cardId={view.cardId}
+            initialDeckId={view.deckId}
             onDone={handleEditorDone}
-            onOpenCard={(id) => setView({ name: 'card', cardId: id })}
+            onOpenCard={(id) => setView({ name: 'card', cardId: id, deckId: view.deckId })}
           />
         )}
       </main>
@@ -139,8 +146,8 @@ export default function App() {
                 const next: View =
                   item.key === 'review'
                     ? { name: 'review' }
-                    : item.key === 'cards'
-                      ? { name: 'cards' }
+                    : item.key === 'media'
+                      ? { name: 'media' }
                       : item.key === 'decks'
                         ? { name: 'decks' }
                         : { name: 'graph' };

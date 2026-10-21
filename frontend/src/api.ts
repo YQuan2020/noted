@@ -4,6 +4,8 @@ import type {
   DecksResponse,
   Grade,
   ImageRecord,
+  Media,
+  MediaType,
   Relation,
   RootOrigin,
   User,
@@ -142,6 +144,52 @@ export const api = {
   },
 
   deleteImage: (id: string) => request<void>(`/images/${id}`, { method: 'DELETE' }),
+
+  listMedia: (type?: MediaType | null, deckId?: string | null) => {
+    const p = new URLSearchParams();
+    if (type) p.set('type', type);
+    if (deckId === null) p.set('deckId', 'none');
+    else if (deckId) p.set('deckId', deckId);
+    const s = p.toString();
+    return request<{ media: Media[] }>(`/media${s ? `?${s}` : ''}`);
+  },
+
+  createMedia: (data: {
+    type: MediaType;
+    title: string;
+    url?: string | null;
+    notes?: string | null;
+    content?: string | null;
+    fileId?: string | null;
+    deckId?: string | null;
+  }) => request<{ media: Media }>('/media', jsonInit('POST', data)),
+
+  updateMedia: (
+    id: string,
+    data: {
+      type?: MediaType;
+      title?: string;
+      url?: string | null;
+      notes?: string | null;
+      content?: string | null;
+      fileId?: string | null;
+      deckId?: string | null;
+    },
+  ) => request<{ media: Media }>(`/media/${id}`, jsonInit('PUT', data)),
+
+  fetchArticle: (url: string) =>
+    request<{ title: string; markdown: string }>('/media/fetch', jsonInit('POST', { url })),
+
+  deleteMedia: (id: string) => request<void>(`/media/${id}`, { method: 'DELETE' }),
+
+  uploadMediaFile: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return request<{ file: { id: string; url: string | null } }>('/media/upload', {
+      method: 'POST',
+      body: form,
+    });
+  },
 
   listRelations: (cardId?: string) =>
     request<{ relations: Relation[] }>(

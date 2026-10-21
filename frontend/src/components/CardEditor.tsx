@@ -8,10 +8,13 @@ import DeckPicker from './DeckPicker';
 
 export default function CardEditor({
   cardId,
+  initialDeckId,
   onDone,
   onOpenCard,
 }: {
   cardId: string | null;
+  /** Deck preselected when creating a new card (ignored when editing). */
+  initialDeckId?: string | null;
   /** Called after save/delete. Receives the new card id when one was created. */
   onDone: (createdId?: string) => void;
   /** Open a different card (e.g. from the relation graph). */
@@ -22,7 +25,7 @@ export default function CardEditor({
   const [mermaid, setMermaid] = useState('');
   const [imageId, setImageId] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [deckId, setDeckId] = useState<string | null>(null);
+  const [deckId, setDeckId] = useState<string | null>(initialDeckId ?? null);
   const [wordPart, setWordPart] = useState<WordPart | null>(null);
   const [rootOrigin, setRootOrigin] = useState<RootOrigin | null>(null);
   const [saving, setSaving] = useState(false);
