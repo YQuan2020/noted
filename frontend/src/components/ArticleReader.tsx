@@ -20,6 +20,7 @@ export default function ArticleReader({
 }) {
   const [hover, setHover] = useState<HoverTarget | null>(null);
   const timerRef = useRef<number | null>(null);
+  const showTimerRef = useRef<number | null>(null);
   const lastTextRef = useRef<string | null>(null);
   const lastMoveRef = useRef(0);
 
@@ -32,6 +33,12 @@ export default function ArticleReader({
   const scheduleClear = () => {
     cancelClear();
     timerRef.current = window.setTimeout(() => setHover(null), 250);
+  };
+  const cancelShow = () => {
+    if (showTimerRef.current) {
+      window.clearTimeout(showTimerRef.current);
+      showTimerRef.current = null;
+    }
   };
 
   /** The word under a viewport point, if any. */
@@ -68,11 +75,26 @@ export default function ArticleReader({
     if (sel && !sel.isCollapsed && sel.toString().trim()) return;
 
     const target = wordAtPoint(e.clientX, e.clientY);
-    if (target && target.text !== lastTextRef.current) {
-      lastTextRef.current = target.text;
-      cancelClear();
-      setHover(target);
+
+    if (!target) {
+      // Off any word: cancel a pending reveal and hide what's showing.
+      lastTextRef.current = null;
+      cancelShow();
+      scheduleClear();
+      return;
     }
+
+    if (target.text === lastTextRef.current) return; // still on the same word
+
+    lastTextRef.current = target.text;
+    cancelClear();
+    cancelShow();
+    setHover(null);
+    // Reveal only after a short dwell, so passing over text doesn't flash the tooltip.
+    showTimerRef.current = window.setTimeout(() => {
+      showTimerRef.current = null;
+      setHover(target);
+    }, 500);
   };
 
   const handleMouseUp = () => {
@@ -94,8 +116,28 @@ export default function ArticleReader({
     onAddCard(text);
   };
 
+  // Tap/click a word to add it directly — the primary path on touch devices,
+  // where there is no hover. Skips links and active text selections.
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    if (target.closest?.('[data-article-tooltip]')) return;
+    if (target.closest?.('a')) return;
+    const sel = window.getSelection();
+    if (sel && !sel.isCollapsed && sel.toString().trim()) return;
+    const word = wordAtPoint(e.clientX, e.clientY);
+    if (word) {
+      setHover(null);
+      onAddCard(word.text);
+    }
+  };
+
   return (
-    <div onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={scheduleClear}>
+    <div
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onClick={handleClick}
+      onMouseLeave={scheduleClear}
+    >
       <MarkdownText text={markdown} />
       {hover && (
         <div

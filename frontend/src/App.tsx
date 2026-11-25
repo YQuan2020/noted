@@ -7,6 +7,7 @@ import CardView from './pages/CardView';
 import Decks from './pages/Decks';
 import Graph from './pages/Graph';
 import Media from './pages/Media';
+import Progress from './pages/Progress';
 import Welcome from './pages/Welcome';
 import type { User } from './types';
 
@@ -16,14 +17,16 @@ type View =
   | { name: 'decks' }
   | { name: 'graph' }
   | { name: 'media' }
+  | { name: 'progress' }
   | { name: 'card'; cardId: string; deckId?: string | null }
   | { name: 'editor'; cardId: string | null; deckId?: string | null };
 
-const NAV: { key: 'review' | 'decks' | 'media' | 'graph'; label: string; icon: string }[] = [
+const NAV: { key: 'review' | 'decks' | 'media' | 'graph' | 'progress'; label: string; icon: string }[] = [
   { key: 'review', label: 'Review', icon: '▣' },
   { key: 'decks', label: 'Decks', icon: '▤' },
   { key: 'media', label: 'Media', icon: '▶' },
   { key: 'graph', label: 'Graph', icon: '⑃' },
+  { key: 'progress', label: 'Progress', icon: '▆' },
 ];
 
 export default function App() {
@@ -110,6 +113,7 @@ export default function App() {
           <Graph onOpenCard={(id) => setView({ name: 'card', cardId: id })} />
         )}
         {view.name === 'media' && <Media />}
+        {view.name === 'progress' && <Progress />}
         {view.name === 'card' && (
           <CardView
             cardId={view.cardId}
@@ -150,7 +154,9 @@ export default function App() {
                       ? { name: 'media' }
                       : item.key === 'decks'
                         ? { name: 'decks' }
-                        : { name: 'graph' };
+                        : item.key === 'progress'
+                          ? { name: 'progress' }
+                          : { name: 'graph' };
                 setView(next);
               }}
               className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs ${

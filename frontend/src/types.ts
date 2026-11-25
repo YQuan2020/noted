@@ -86,3 +86,13 @@ export interface Media {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface ReviewStats {
+  days: number;
+  totalCards: number;
+  learnedCards: number;
+  matureCards: number;
+  dueCards: number;
+  reviews: { day: string; count: number }[];
+  learned: { day: string; count: number }[];
+}

@@ -7,6 +7,7 @@ import type {
   Media,
   MediaType,
   Relation,
+  ReviewStats,
   RootOrigin,
   User,
   WordPart,
@@ -90,6 +91,9 @@ export const api = {
   },
 
   getCard: (id: string) => request<{ card: Card }>(`/cards/${id}`),
+
+  getReviewStats: (days = 30) =>
+    request<ReviewStats>(`/cards/stats?days=${days}`),
 
   createCard: (data: {
     front: string;

@@ -15,6 +15,7 @@ model User {
   relations CardRelation[]
   decks     Deck[]
   media     Media[]
+  reviews   ReviewLog[]
   createdAt DateTime @default(now())
 }
 
@@ -61,6 +62,7 @@ model Card {
   relationsAsSource CardRelation[] @relation("SourceCard")
   relationsAsTarget CardRelation[] @relation("TargetCard")
   relationCards     CardRelation[] @relation("RelationCard")
+  reviews           ReviewLog[]
 
   @@index([userId])
   @@index([userId, due])
@@ -82,6 +84,19 @@ model CardRelation {
   @@index([userId])
   @@index([sourceCardId])
   @@index([targetCardId])
+}
+
+model ReviewLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cardId    String
+  card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  grade     String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([cardId])
 }
 
 model Deck {

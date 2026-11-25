@@ -123,6 +123,89 @@ cardsRouter.get('/review', async (req, res) => {
   res.json({ cards: cards.map(toDto), total: totalDue });
 });
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Local `YYYY-MM-DD` key for a date. */
+function dayKey(d: Date): string {
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${dd}`;
+}
+
+/**
+ * GET /api/cards/stats — learning progress for the dashboard.
+ * Returns daily review counts and a cumulative "cards learned" series over the
+ * last `?days=` (default 30), plus current SRS totals.
+ */
+cardsRouter.get('/stats', async (req, res) => {
+  const userId = res.locals.user.id;
+  const days = Math.min(Math.max(Number(req.query.days) || 30, 7), 365);
+  const now = new Date();
+
+  const buckets: { day: string; count: number }[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    buckets.push({ day: dayKey(new Date(now.getTime() - i * DAY_MS)), count: 0 });
+  }
+
+  const since = new Date(now.getTime() - (days - 1) * DAY_MS);
+  since.setHours(0, 0, 0, 0);
+
+  const [logs, firstLearned, totalCards, learnedCards, matureCards, dueCards] =
+    await Promise.all([
+      prisma.reviewLog.findMany({
+        where: { userId, createdAt: { gte: since } },
+        select: { createdAt: true },
+      }),
+      // First review date per card = the day it was learned.
+      prisma.reviewLog.groupBy({
+        by: ['cardId'],
+        _min: { createdAt: true },
+        where: { userId },
+      }),
+      prisma.card.count({ where: { userId } }),
+      prisma.card.count({ where: { userId, reps: { gt: 0 } } }),
+      prisma.card.count({ where: { userId, intervalDays: { gte: 21 } } }),
+      prisma.card.count({
+        where: { userId, OR: [{ due: null }, { due: { lte: now } }] },
+      }),
+    ]);
+
+  // Reviews per day.
+  const byDay = new Map(buckets.map((b) => [b.day, b]));
+  for (const l of logs) {
+    const b = byDay.get(dayKey(l.createdAt));
+    if (b) b.count++;
+  }
+
+  // Cumulative distinct cards learned, seeded with anything learned before the window.
+  const newLearned = new Map<string, number>();
+  for (const f of firstLearned) {
+    const t = f._min.createdAt;
+    if (!t) continue;
+    const key = dayKey(t);
+    newLearned.set(key, (newLearned.get(key) ?? 0) + 1);
+  }
+  let cumulative = 0;
+  const startKey = buckets[0].day;
+  for (const [key, n] of newLearned) {
+    if (key < startKey) cumulative += n;
+  }
+  const learned = buckets.map((b) => {
+    cumulative += newLearned.get(b.day) ?? 0;
+    return { day: b.day, count: cumulative };
+  });
+
+  res.json({
+    days,
+    totalCards,
+    learnedCards,
+    matureCards,
+    dueCards,
+    reviews: buckets,
+    learned,
+  });
+});
+
 /** GET /api/cards/:id — a single card with its relations. */
 cardsRouter.get('/:id', async (req, res) => {
   const userId = res.locals.user.id;
@@ -331,16 +414,19 @@ cardsRouter.post('/:id/review', async (req, res) => {
     grade,
   );
 
-  const updated = await prisma.card.update({
-    where: { id: card.id },
-    data: {
-      intervalDays: next.intervalDays,
-      ease: next.ease,
-      reps: next.reps,
-      due: next.due,
-    },
-    include: { image: true },
-  });
+  const [updated] = await prisma.$transaction([
+    prisma.card.update({
+      where: { id: card.id },
+      data: {
+        intervalDays: next.intervalDays,
+        ease: next.ease,
+        reps: next.reps,
+        due: next.due,
+      },
+      include: { image: true },
+    }),
+    prisma.reviewLog.create({ data: { userId, cardId: card.id, grade } }),
+  ]);
   res.json({ card: toDto(updated) });
 });
 
